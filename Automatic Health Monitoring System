@@ -1,0 +1,114 @@
+import java.io.*;
+import java.util.*;
+
+public class Main {
+
+    private static final String FILE_NAME = "patients_data.txt";
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("Automatic Health Monitoring System");
+            System.out.println("1. Add or Update Report");
+            System.out.println("2. Retrieve Report");
+            System.out.println("3. Exit");
+            System.out.print("Choose an option: ");
+
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1:
+                    addOrUpdateReport(scanner);
+                    break;
+                case 2:
+                    retrieveReport(scanner);
+                    break;
+                case 3:
+                    System.out.println("Exiting...");
+                    scanner.close();
+                    System.exit(0);
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+
+    private static void addOrUpdateReport(Scanner scanner) {
+        System.out.print("Enter patient ID: ");
+        String patientId = scanner.nextLine();
+        System.out.print("Enter report details: ");
+        String reportDetails = scanner.nextLine();
+
+        List<String> records = new ArrayList<>();
+        boolean updated = false;
+
+        File file = new File(FILE_NAME);
+
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.startsWith(patientId + "|")) {
+                        records.add(patientId + "|" + reportDetails);
+                        updated = true;
+                    } else {
+                        records.add(line);
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("An error occurred while reading the file.");
+                e.printStackTrace();
+            }
+        }
+
+        if (!updated) {
+            records.add(patientId + "|" + reportDetails);
+        }
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (String record : records) {
+                writer.write(record);
+                writer.newLine();
+            }
+            System.out.println("Report added/updated successfully.");
+        } catch (IOException e) {
+            System.out.println("An error occurred while writing the file.");
+            e.printStackTrace();
+        }
+    }
+
+    private static void retrieveReport(Scanner scanner) {
+        System.out.print("Enter patient ID to retrieve report: ");
+        String patientId = scanner.nextLine();
+
+        File file = new File(FILE_NAME);
+
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                boolean found = false;
+
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split("\\|", 2);
+                    if (parts[0].equals(patientId)) {
+                        System.out.println("Report for Patient ID " + patientId + ": " + parts[1]);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    System.out.println("No report found for Patient ID " + patientId);
+                }
+            } catch (IOException e) {
+                System.out.println("An error occurred while retrieving the report.");
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("No records file found.");
+        }
+    }
+}
